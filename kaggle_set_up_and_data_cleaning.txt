@@ -1,0 +1,335 @@
+----------Installing Kaggle in colab-----------
+
+!pip install Kaggle
+
+-----------importing downloaded Kaggle to colab-----
+
+from google.colab import files
+files.upload()
+
+
+------------Move the kaggle.json file to the correct directory--------------
+
+!mkdir -p ~/.kaggle
+!cp kaggle.json ~/.kaggle/
+!chmod 600 ~/.kaggle/kaggle.json
+
+
+------------To list all the data sets------------
+! kaggle datasets list
+
+--Downloading the airbnb dataset--
+!kaggle datasets download -d arianazmoudeh/airbnbopendata --unzip
+
+----------------Reading the Airbnb File----------
+import pandas as pd
+
+pd.read_csv('Airbnb_Open_Data.csv')
+
+
+------Defining Data Types----------
+Airbnb = pd.read_csv('Airbnb_Open_Data.csv')
+Airbnb.dtypes
+
+------------Finding How many coumns and the rows-------------
+Airbnb.shape
+
+
+----------------Checking For nulls--------------------
+df = Airbnb.isna().sum()
+df
+
+----------Since all the columns are lower case lets make all the columns to lower case----
+Airbnb.columns = Airbnb.columns.str.replace('NAME', 'name')
+Airbnb
+
+
+------------Here in the dataset we can see some names are missing but we can find that by using lat and long and replace it-------------
+
+Airbnb.groupby(['lat','long']).name.count()
+
+
+--------------------------we can see that some lat and log are repeating so we are trying to get those names and fill it in the empty shell of our name column----------------
+
+for index, row in Airbnb.iterrows():
+    if pd.isna(row['name']):
+        # Find matching rows based on lat and long
+        matching_rows = Airbnb[(Airbnb['lat'] == row['lat']) & (Airbnb['long'] == row['long']) & Airbnb['name'].notna()]
+
+        # If a match is found, get the first unique name and update
+        if not matching_rows.empty:
+            Airbnb.at[index, 'name'] = matching_rows['name'].unique()[0]
+
+Airbnb
+
+
+-----------------Copying the data into another dataframe-----------
+
+df = Airbnb.copy()
+df.isna().sum()
+
+
+-----------Since we get the name we need to drop columns with null value-------
+
+df.dropna(subset=['name'],inplace = True)
+df.isna().sum()
+
+
+-----------Making all nul host_identity to unconfirmed------
+df.dropna(subset=['name'],inplace = True)
+df.isna().sum()
+
+
+
+---------Making all null host_identity to unconfirmed---------
+df['host_identity_verified'] = df['host_identity_verified'].fillna('unconfirmed')
+df.isna().sum()
+
+
+
+--------------Making all null host_name to unkown--------
+df['host name'] = df['host name'].fillna('unknown')
+df.isna().sum()
+
+
+------------we are combining both neighbourhood and neighbourhood group as a single column area---------------
+df.loc[:,'neighbourhood group':'neighbourhood']
+df.groupby(['neighbourhood group','neighbourhood']).name.count()
+df.loc[(df['neighbourhood group'] == 'Bronx') & (df['neighbourhood'] == 'Allerton')]
+df['area'] = df['neighbourhood group'] + ' ' + df['neighbourhood']
+
+
+--------now we can drop lat and long as we have both the combine location-----------
+df.drop(columns=['lat', 'long'], inplace=True)
+df.isna().sum()
+
+
+
+------------------Whole Dataset have only 1 country and 1 country code so we can drop this column--------
+
+df.country.unique()
+df['country code'].unique()
+df.drop(columns=['country', 'country code'], inplace=True)
+df.isna().sum()
+
+
+----------We are assigning True or false for instant bookable based on the ares-------
+
+df.loc[(df['area'] == 'Brooklyn Kensington'), 'instant_bookable'].mode()[0]
+
+for index, row in df.iterrows():
+    if pd.isna(row['instant_bookable']):
+        # Find the mode of 'instant_bookable' for the same area
+        m = df.loc[df['area'] == row['area'], 'instant_bookable'].mode()
+
+        if len(m) == 0:
+            df.at[index, 'instant_bookable'] = 'False'
+        else:
+            df.at[index, 'instant_bookable'] = m[0]
+
+df.isna().sum()
+
+
+--------We will make all nan cancelation values to flexible since they didnt mention it is not important ------------
+
+df['cancellation_policy'].unique()
+
+df['cancellation_policy'] = df['cancellation_policy'].fillna('flexible')
+
+df.isna().sum()
+
+
+
+-----------------Handling Construction Year---------
+
+df['Construction year']
+
+df['Construction year'] = df['Construction year'].fillna(0).astype(int)
+
+
+--------------Calculate the mean of 'construction year', excluding 0 values-------
+
+mean_construction_year = df.loc[df['Construction year'] != 0, 'Construction year'].mean()
+
+
+--------------- Fill 0 values with the calculated mean ----------
+
+df['Construction year'] = df['Construction year'].replace(0, mean_construction_year)
+
+df.isna().sum()
+
+
+
+----------------Convert Price and service fee to int and null value as 0-----------
+
+
+df.loc[:, ['price', 'service fee']]
+
+for index, row in df.iterrows():
+    # Handling price
+    if not pd.isna(row['price']):
+        temp = row['price'][1:]
+        ans = ''
+        for i in temp:
+            if i != ',':
+                ans += i
+        df.at[index, 'price'] = int(ans)
+    else:
+        df.at[index, 'price'] = 0
+
+    # Handling service fee
+    if not pd.isna(row['service fee']):
+        temp = row['service fee'][1:]
+        ans = ''
+        for i in temp:
+            if i != ',':
+                ans += i
+        df.at[index, 'service fee'] = int(ans)
+    else:
+        df.at[index, 'service fee'] = 0
+
+
+
+df.loc[:, ['price', 'service fee']]
+
+
+---------------Here filling the null values with mean based on the area---------
+
+
+for index, row in df.iterrows():
+    # Update price if it's 0
+    if row['price'] == 0:
+        m = df.loc[df['area'] == row['area'], 'price'].mean()
+
+        if not pd.isna(m):
+            df.at[index, 'price'] = int(m)
+        else:
+            df.at[index, 'price'] = int(df['price'].mean())
+
+    # Update service fee if it's 0
+    if row['service fee'] == 0:
+        m = df.loc[df['area'] == row['area'], 'service fee'].mean()
+
+        if not pd.isna(m):
+            df.at[index, 'service fee'] = int(m)
+        else:
+            df.at[index, 'service fee'] = int(df['service fee'].mean())
+
+
+
+
+----------------Minimum nights-------------
+
+df['minimum nights'].unique()
+
+
+----------To fill the minimum nights we use mode----------
+
+df['minimum nights'] = df['minimum nights'].fillna(df['minimum nights'].mode()[0])
+
+
+df.isna().sum()
+
+
+
+------------We will fill number of reviews null values with no reviews--------
+
+df['number of reviews'] = df['number of reviews'].fillna(0)
+
+df.isna().sum()
+
+
+
+
+-----------------We dont need of last review and reviews per month so we delete it------
+
+df.drop(columns = ['last review','reviews per month'], inplace = True)
+
+df.isna().sum()
+
+
+
+--------------no need of review rate number-----------
+
+df.drop(columns = ['review rate number'],inplace = True)
+
+
+
+
+---------------No need of calculated host listing count----------
+
+df.drop(columns = ['calculated host listings count'],inplace = True)
+
+df.isna().sum()
+
+
+---------We will fill availability 365 based on mean------
+
+
+def update_availability(x):
+    if pd.isna(x['availability 365']):
+        m = df.loc[(df['area'] == x.area), 'availability 365'].mean()
+        # If that area is present only once then we won't get value, we get null
+        # In that case, we will insert the mean of availability 365
+        if not pd.isna(m):
+            x['availability 365'] = int(m)
+        else:
+            x['availability 365'] = df['availability 365'].mean()
+    return x
+
+# Apply the function to the DataFrame df
+df = df.apply(update_availability, axis=1)
+
+
+
+
+-------------for null values of house rules we keep it as no rules-------
+
+df['house_rules'] = df['house_rules'].fillna('no rules')
+
+
+
+
+------------Checking for license-------
+
+df['license'].unique()
+
+
+---------license is same for all so we can drop this column---------
+
+df.drop(columns = ['license'],inplace = True)
+
+
+
+------------------we keep null address areas as unknowm---------
+
+df['area'] = df['area'].fillna('unknown')
+
+
+
+-----------Handling neighbourhood group and neighbourhood----
+
+df['neighbourhood group'] = df['neighbourhood group'].fillna('unknown')
+df['neighbourhood'] = df['neighbourhood'].fillna('unknown')
+
+df.isna().sum()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

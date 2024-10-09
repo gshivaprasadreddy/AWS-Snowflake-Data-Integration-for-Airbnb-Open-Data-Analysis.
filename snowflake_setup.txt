@@ -1,0 +1,76 @@
+create database airbnb;
+
+use database airbnb;
+
+use  schema public
+
+--creation of table
+CREATE or replace TABLE Airbnb_Listings (
+    id INTEGER,
+    name STRING,
+    host_id INTEGER,
+    host_identity_verified String,
+    host_name STRING,
+    neighbourhood_group STRING,
+    neighbourhood STRING,
+    instant_bookable BOOLEAN,
+    cancellation_policy STRING,
+    room_type STRING,
+    construction_year INTEGER,
+    price DECIMAL(10, 2),
+    service_fee DECIMAL(10, 2),
+    minimum_nights INTEGER,
+    number_of_reviews INTEGER,
+    availability_365 INTEGER,
+    house_rules STRING,
+    area STRING
+);
+
+
+--creation of file format
+
+
+CREATE OR REPLACE FILE FORMAT enhanced_csv_format
+TYPE = 'CSV'
+FIELD_OPTIONALLY_ENCLOSED_BY = '"' 
+FIELD_DELIMITER = ',' 
+SKIP_HEADER = 1 
+NULL_IF = ('', 'NULL') 
+EMPTY_FIELD_AS_NULL = TRUE 
+ERROR_ON_COLUMN_COUNT_MISMATCH = FALSE 
+
+
+------- storage integration
+
+CREATE OR REPLACE STORAGE INTEGRATION my_s3_integration
+TYPE = EXTERNAL_STAGE
+STORAGE_PROVIDER = S3
+ENABLED = TRUE
+STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::*********:role/airbnb0role_'
+STORAGE_ALLOWED_LOCATIONS = ('s3://airbnb0project/');
+
+
+---- desc the integration part
+
+desc integration my_s3_integration;
+
+---- creating stage
+
+CREATE OR REPLACE STAGE my_ext_stage
+URL = 's3://airbnb0project/cleaned_airbnb.csv'
+STORAGE_INTEGRATION = my_s3_integration
+FILE_FORMAT = (FORMAT_NAME = 'enhanced_csv_format');
+
+-------- data ingestion using snowpipe
+
+CREATE OR REPLACE PIPE my_snowpipe
+AUTO_INGEST = TRUE
+AS
+COPY INTO Airbnb_Listings
+FROM @my_external_stage
+FILE_FORMAT = (TYPE = 'CSV' FIELD_OPTIONALLY_ENCLOSED_BY = '"')
+PATTERN = '.*.csv';
+
+
+------copying the arn from snowpipe 
+show pipes

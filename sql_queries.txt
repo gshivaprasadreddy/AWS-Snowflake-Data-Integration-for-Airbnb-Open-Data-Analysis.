@@ -1,0 +1,80 @@
+--count total no. of listings
+select * from airbnb_listings limit 10;
+
+
+--avg price of listings
+select avg(price) from airbnb_listings;
+
+
+--Total Listings by Neighborhood
+select neighbourhood,count(*) as listing_count 
+from airbnb_listings
+group by neighbourhood
+order by listing_count;
+
+
+--Total Listings by Room Type
+select room_type,count(*) as listing_count 
+from airbnb_listings
+group by room_type
+order by listing_count;
+
+
+--Average Price by Neighborhood
+select neighbourhood,avg(price) as avg_price
+from airbnb_listings
+group by neighbourhood
+order by avg_price;
+
+
+--Average Number of Reviews per Listing
+select avg(number_of_reviews) as avg_reviews from airbnb_listings;
+
+
+--Listings with Availability for Entire Year
+select * from airbnb_listings where availability_365 = 365;
+
+
+--Listings Grouped by Cancellation Policy.
+select cancellation_policy, count(*) as listings_count 
+from airbnb_listings 
+group by cancellation_policy;
+
+
+--Top Hosts with Most Listings
+select host_name, count(*) as total_listings 
+from airbnb_listings 
+group by host_name 
+order by total_listings desc 
+limit 10;
+
+
+--Find Listings Where Hosts Offer Multiple Room Types
+select host_name, room_type, count(*) as room_type_count 
+from airbnb_listings 
+group by host_name, room_type 
+having room_type_count > 1 
+order by host_name;
+
+
+-- Neighborhoods with the most instant bookable listings:
+select neighbourhood, count(*) as instant_bookable_count 
+from airbnb_listings 
+where instant_bookable = true 
+group by neighbourhood 
+order by instant_bookable_count desc;
+
+
+--Most Expensive Listing in Each Neighborhood
+select neighbourhood, name, max(price) as max_price 
+from airbnb_listings 
+group by neighbourhood, name 
+order by max_price desc;
+
+
+--Hosts with the Most Listings in a Single Neighborhood
+select host_name, neighbourhood, count(*) as total_listings 
+from airbnb_listings 
+group by host_name, neighbourhood 
+order by total_listings desc 
+limit 5;

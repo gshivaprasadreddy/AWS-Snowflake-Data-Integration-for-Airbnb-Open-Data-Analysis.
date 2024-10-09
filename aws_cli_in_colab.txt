@@ -1,0 +1,19 @@
+------- aws cli in colab-------
+
+
+#installing aws cli
+!pip install awscli
+
+----- aws configuration---------
+
+!aws configure
+
+
+-------- saving the cleaned data in to the csv form --------
+
+df.to_csv('cleaned_airbnb.csv', index=False) 
+
+
+--- uploading the ceaned data into bucket -------
+
+!aws s3 cp cleaned_airbnb.csv s3://your_bucket_name/cleaned_airbnb.csv

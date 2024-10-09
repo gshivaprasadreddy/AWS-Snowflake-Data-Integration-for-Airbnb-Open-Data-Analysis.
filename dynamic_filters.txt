@@ -1,0 +1,45 @@
+--Filter by Neighbourhood
+select id, name, host_name, price, room_type, number_of_reviews, availability_365 
+from airbnb_listings 
+where neighbourhood = :neighbourhood;
+
+--Filter by Price Range
+select id, name, host_name, price, room_type, number_of_reviews, availability_365 
+from airbnb_listings 
+where price between :min_price and :max_price;
+
+
+--Filter by Room Type
+select id, name, host_name, price, neighbourhood, number_of_reviews, availability_365 
+from airbnb_listings 
+where room_type = :room_typr;
+
+--Filter by Availability
+select id, name, host_name, price, room_type, neighbourhood, number_of_reviews 
+from airbnb_listings 
+where availability_365 = :min_availability;
+
+--Filter by Cancellation Policy
+select id, name, host_name, price, room_type, number_of_reviews, availability_365 
+from airbnb_listings 
+where cancellation_policy = :cancellation_policy;
+
+--Filter by Minimum Reviews
+select id, name, host_name, price, room_type, availability_365 
+from airbnb_listings 
+where number_of_reviews = :min_reviews;
+
+--Filter by Host Verification Status
+select id, name, host_name, price, room_type, neighbourhood, number_of_reviews 
+from airbnb_listings 
+where host_identity_verified = :host_verified;
+
+--Filter by Construction Year
+select id, name, host_name, price, room_type, neighbourhood, number_of_reviews 
+from airbnb_listings 
+where construction_year = :min_year;
+
+
+
+
+

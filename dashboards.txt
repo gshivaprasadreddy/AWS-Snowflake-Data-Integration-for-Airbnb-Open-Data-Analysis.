@@ -1,0 +1,38 @@
+----- Calculate the average price for each neighborhood.
+
+SELECT NEIGHBOURHOOD, AVG(PRICE) AS avg_price
+FROM airbnb_listings
+GROUP BY NEIGHBOURHOOD;
+
+
+------- Top Hosts by Number of Listings
+SELECT host_name, COUNT(*) AS total_listings
+FROM airbnb_listings
+GROUP BY host_name
+ORDER BY total_listings DESC
+LIMIT 10;
+
+
+-- Host Identity Verification
+SELECT host_identity_verified, COUNT(*) AS count
+FROM airbnb_listings
+GROUP BY host_identity_verified;
+
+
+-- Listings Density by Neighborhood (coordinates for mapping required)
+SELECT neighbourhood, COUNT(*) AS listing_count, AVG(availability_365) AS avg_availability
+FROM airbnb_listings
+GROUP BY neighbourhood;
+
+
+---- Availability by Neighborhood
+SELECT neighbourhood, AVG(availability_365) AS avg_availability
+FROM airbnb_listings
+GROUP BY neighbourhood;
+
+
+----- Cancellation Policy Breakdown
+SELECT cancellation_policy, COUNT(*) AS listings_count
+FROM airbnb_listings
+GROUP BY cancellation_policy;
+
